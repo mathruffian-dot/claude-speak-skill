@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>speak — Claude Code 語音回覆技能</title>
+<style>
+  :root{
+    --bg:#0d1b2a; --bg2:#13293d; --card:#1b3a4b; --line:#2a4a5e;
+    --text:#e8f1f8; --muted:#9fb6c6; --accent:#2ec4b6; --accent2:#ff9f1c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;
+    background:linear-gradient(160deg,var(--bg),var(--bg2));
+    color:var(--text);line-height:1.7;min-height:100vh;padding:0 20px;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:64px 0 80px}
+  .hero{text-align:center;margin-bottom:56px}
+  .hero .icon{font-size:64px;filter:drop-shadow(0 4px 16px rgba(46,196,182,.4))}
+  h1{font-size:2.6rem;margin:12px 0 8px;letter-spacing:1px}
+  h1 .g{color:var(--accent)}
+  .tag{color:var(--muted);font-size:1.05rem}
+  .pill{display:inline-block;margin-top:18px;padding:6px 16px;border:1px solid var(--accent);
+    border-radius:999px;color:var(--accent);font-size:.9rem}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:28px 30px;margin:22px 0;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  h2{font-size:1.35rem;margin-bottom:16px;color:var(--accent2)}
+  p{color:var(--text);margin-bottom:10px}
+  .muted{color:var(--muted)}
+  pre{background:#0a1620;border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;overflow-x:auto;margin:12px 0}
+  code{font-family:Consolas,"Courier New",monospace;font-size:.9rem;color:#bfe9e2}
+  .flow{white-space:pre;color:#bfe9e2;font-size:.86rem;line-height:1.5}
+  ul{list-style:none;margin:8px 0}
+  li{padding:6px 0 6px 26px;position:relative}
+  li::before{content:"▸";position:absolute;left:4px;color:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:.94rem}
+  th{color:var(--accent);font-weight:600}
+  a.btn{display:inline-block;margin-top:8px;padding:11px 22px;background:var(--accent);
+    color:#04211d;font-weight:700;border-radius:10px;text-decoration:none}
+  a.btn:hover{background:#3fd8c9}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:40px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="icon">🔊</div>
+    <h1><span class="g">speak</span> 語音回覆技能</h1>
+    <p class="tag">把結論用自然的台灣中文語音唸出來 — 行內、無視窗、與打字並行</p>
+    <div class="pill">Claude Code · 全域技能</div>
+  </div>
+
+  <section>
+    <h2>這是什麼</h2>
+    <p>達成「使用者語音輸入 → Claude 語音回覆」的對話循環。以微軟免費的 <strong>Edge-TTS</strong> 生成台灣中文語音，串流邊生成邊播，全程不開任何外部播放器視窗。</p>
+  </section>
+
+  <section>
+    <h2>三層備援構造</h2>
+    <div class="flow">第 1 層｜串流模式（預設，最快）
+  speak.ps1 → speak_stream.py → Edge-TTS 串流 → mpv/ffplay 管道播放
+  首聲約 1 秒、不落地、無視窗
+        │
+        ▼
+第 2 層｜整檔模式
+  Edge-TTS 生成 mp3 → MediaPlayer(COM) → 退 WMPlayer(COM)
+        │
+        ▼
+第 3 層｜SAPI 離線備援
+  Windows 內建語音（零延遲、免網路）</div>
+  </section>
+
+  <section>
+    <h2>原理</h2>
+    <ul>
+      <li><strong>TTS 引擎</strong>：微軟 Edge-TTS，免費、線上、音質自然</li>
+      <li><strong>為什麼快</strong>：非同步串流，每塊音訊一生成就塞進播放器管道，收到就出聲</li>
+      <li><strong>為什麼無視窗</strong>：mpv/ffplay 管道 + COM 物件播放，絕不用 Start-Process</li>
+      <li><strong>與打字並行</strong>：背景執行，語音與文字回覆同時發生</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>使用</h2>
+    <pre><code>pwsh -NoProfile skills/speak/speak.ps1 "要唸的文字"</code></pre>
+    <pre><code>echo "要唸的文字" | python skills/speak/speak_stream.py - zh-TW-YunJheNeural</code></pre>
+  </section>
+
+  <section>
+    <h2>環境需求</h2>
+    <table>
+      <tr><th>元件</th><th>用途</th><th>備援</th></tr>
+      <tr><td>Python + edge-tts</td><td>語音生成</td><td>無 → 退 SAPI</td></tr>
+      <tr><td>mpv 或 ffplay</td><td>串流播放</td><td>無 → 退整檔 COM</td></tr>
+      <tr><td>網路</td><td>Edge-TTS 連線</td><td>無 → 退離線 SAPI</td></tr>
+      <tr><td>PowerShell 7</td><td>執行 speak.ps1</td><td>PS 5.1 需 UTF-8 BOM</td></tr>
+    </table>
+  </section>
+
+  <section style="text-align:center">
+    <h2>原始碼</h2>
+    <p class="muted">技能三檔、全域設定、安裝說明都在 repo 裡。</p>
+    <a class="btn" href="https://github.com/mathruffian-dot/claude-speak-skill">前往 GitHub Repo →</a>
+  </section>
+
+  <footer>MIT License · Claude Code 全域技能</footer>
+
+</div>
+</body>
+</html>
