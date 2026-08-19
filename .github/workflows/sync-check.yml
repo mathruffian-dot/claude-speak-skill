@@ -32,7 +32,7 @@ jobs:
         run: |
           set -u
           cat > /tmp/exclude.txt <<'EXC'
-          # （無例外）
+          .github/workflows/sync-check.yml
           EXC
 
           list() {  # $1=根目錄 → 相對路徑清單
