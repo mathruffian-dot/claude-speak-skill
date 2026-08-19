@@ -32,8 +32,8 @@ jobs:
         run: |
           set -u
           cat > /tmp/exclude.txt <<'EXC'
-# （無例外）
-EXC
+          # （無例外）
+          EXC
 
           list() {  # $1=根目錄 → 相對路徑清單
             ( cd "$1" 2>/dev/null || { echo "找不到目錄 $1" >&2; exit 2; }
